@@ -21,6 +21,8 @@ const swagger = {
     { name: "User", description: "User management" },
     { name: "Feature", description: "Feature management" },
     { name: "Bucket", description: "Bucket management" },
+    { name: "Log", description: "Log management" },
+    { name: "AlarmX", description: "AlarmX file processing" },
   ],
   paths: {
     "/auth/login": {
@@ -671,6 +673,231 @@ const swagger = {
         },
       },
     },
+    "/log/create": {
+      post: {
+        tags: ["Log"],
+        operationId: "createLog",
+        summary: "Create a new log entry",
+        parameters: [],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["uid", "action", "target"],
+                properties: {
+                  uid: {
+                    type: "integer",
+                    description: "User ID",
+                  },
+                  action: {
+                    type: "string",
+                    description: "Action performed",
+                  },
+                  target: {
+                    type: "string",
+                    description: "Target of the action",
+                  },
+                  details: {
+                    type: "string",
+                    description: "Additional details",
+                  },
+                },
+                example: {
+                  uid: 1,
+                  action: "create",
+                  target: "user",
+                  details: "Created new user",
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Success",
+          },
+          500: {
+            description: "Internal Server Error",
+          },
+        },
+      },
+    },
+    "/log/findByUserId/{uid}": {
+      get: {
+        tags: ["Log"],
+        operationId: "findLogsByUserId",
+        summary: "Find logs by user ID",
+        parameters: [
+          {
+            in: "path",
+            name: "uid",
+            description: "User ID",
+            required: true,
+            schema: {
+              type: "integer",
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Success",
+          },
+          500: {
+            description: "Internal Server Error",
+          },
+        },
+      },
+    },
+    "/log/findById/{lid}": {
+      get: {
+        tags: ["Log"],
+        operationId: "findLogById",
+        summary: "Find log by log ID",
+        parameters: [
+          {
+            in: "path",
+            name: "lid",
+            description: "Log ID",
+            required: true,
+            schema: {
+              type: "integer",
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Success",
+          },
+          500: {
+            description: "Internal Server Error",
+          },
+        },
+      },
+    },
+    "/log/findByAction": {
+      post: {
+        tags: ["Log"],
+        operationId: "findLogsByAction",
+        summary: "Find logs by action",
+        parameters: [],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["action"],
+                properties: {
+                  action: {
+                    type: "string",
+                    description: "Action to filter by",
+                  },
+                },
+                example: {
+                  action: "create",
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Success",
+          },
+          500: {
+            description: "Internal Server Error",
+          },
+        },
+      },
+    },
+    "/log/find": {
+      post: {
+        tags: ["Log"],
+        operationId: "findLogs",
+        summary: "Find logs by condition",
+        parameters: [],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  condition: {
+                    type: "object",
+                    description: "Search condition object",
+                  },
+                },
+                example: {
+                  condition: {
+                    action: "create",
+                    target: "user",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Success",
+          },
+          500: {
+            description: "Internal Server Error",
+          },
+        },
+      },
+    },
+    "/alarmx/file/adibin": {
+      get: {
+        tags: ["AlarmX"],
+        operationId: "processAdibin",
+        summary: "Process ADIBIN file",
+        parameters: [
+          {
+            in: "query",
+            name: "filename",
+            description: "Name of the ADIBIN file to process",
+            required: true,
+            schema: {
+              type: "string",
+            },
+          },
+          {
+            in: "query",
+            name: "offset",
+            description: "Offset in seconds for reading the file",
+            required: true,
+            schema: {
+              type: "integer",
+            },
+          },
+          {
+            in: "query",
+            name: "range",
+            description: "Length in seconds of data to read",
+            required: true,
+            schema: {
+              type: "integer",
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Success",
+            content: {
+              "text/plain": {
+                schema: {
+                  type: "string",
+                },
+              },
+            },
+          },
+          500: {
+            description: "Internal Server Error",
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
@@ -758,6 +985,39 @@ const swagger = {
           status: {
             type: "string",
             default: "Active",
+          },
+        },
+      },
+      log: {
+        type: "object",
+        required: ["id", "action", "target", "userId"],
+        properties: {
+          id: {
+            type: "integer",
+          },
+          action: {
+            type: "string",
+            description: "Action performed",
+          },
+          target: {
+            type: "string",
+            description: "Target of the action",
+          },
+          details: {
+            type: "string",
+            description: "Additional details",
+          },
+          userId: {
+            type: "integer",
+            description: "User ID who performed the action",
+          },
+          createdAt: {
+            type: "string",
+            format: "date-time",
+          },
+          updatedAt: {
+            type: "string",
+            format: "date-time",
           },
         },
       },
@@ -904,8 +1164,7 @@ const loadFeatures = () => {
     if (featureData.components?.responses)
       _.merge(swagger.components.responses, featureData.components.responses);
     if (featureData.components?.requestBodies)
-      _.merge(swagger.components.requestBodies, featureData.components.request
-    );
+      _.merge(swagger.components.requestBodies, featureData.components.requestBodies);
   }
 
   return swagger;
