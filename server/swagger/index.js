@@ -865,19 +865,19 @@ const swagger = {
           {
             in: "query",
             name: "offset",
-            description: "Offset for reading the file",
+            description: "Offset in seconds for reading the file",
             required: true,
             schema: {
-              type: "string",
+              type: "integer",
             },
           },
           {
             in: "query",
             name: "range",
-            description: "Range of data to read",
+            description: "Length in seconds of data to read",
             required: true,
             schema: {
-              type: "string",
+              type: "integer",
             },
           },
         ],
